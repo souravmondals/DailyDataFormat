@@ -1,0 +1,11 @@
+C:\Program D\Project\DailyDataFormat\DailyDataFormat\bin\Debug\DailyDataFormat.exe.config
+C:\Program D\Project\DailyDataFormat\DailyDataFormat\bin\Debug\DailyDataFormat.exe
+C:\Program D\Project\DailyDataFormat\DailyDataFormat\bin\Debug\DailyDataFormat.pdb
+C:\Program D\Project\DailyDataFormat\DailyDataFormat\obj\Debug\DailyDataFormat.csprojAssemblyReference.cache
+C:\Program D\Project\DailyDataFormat\DailyDataFormat\obj\Debug\DailyDataFormat.csproj.CoreCompileInputs.cache
+C:\Program D\Project\DailyDataFormat\DailyDataFormat\obj\Debug\DailyDataFormat.exe
+C:\Program D\Project\DailyDataFormat\DailyDataFormat\obj\Debug\DailyDataFormat.pdb
+C:\Program D\Project\DailyDataFormat\DailyDataFormat\bin\Debug\DailyDataFormat.exe.manifest
+C:\Program D\Project\DailyDataFormat\DailyDataFormat\bin\Debug\DailyDataFormat.application
+C:\Program D\Project\DailyDataFormat\DailyDataFormat\obj\Debug\DailyDataFormat.exe.manifest
+C:\Program D\Project\DailyDataFormat\DailyDataFormat\obj\Debug\DailyDataFormat.application

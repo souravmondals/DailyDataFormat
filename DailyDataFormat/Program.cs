@@ -9,7 +9,7 @@ namespace DailyDataFormat
 {
     public class Program
     {
-        public static string filedate;
+        public static string filedate; 
         public static List<string> StockList;
 
         public static List<string> Notfounddata = new List<string>();

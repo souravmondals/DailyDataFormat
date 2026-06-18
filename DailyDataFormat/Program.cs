@@ -111,6 +111,14 @@ namespace DailyDataFormat
                     }
                 }
 
+                foreach (string stock in SkipList)
+                {
+                    if (Stockdata.Any(r => r.Name == stock))
+                    {
+                        Notfounddata.Remove(stock);              
+                    }
+                }
+
                 if (!Directory.Exists("Output"))
                 {
                     Directory.CreateDirectory("Output");
@@ -176,6 +184,14 @@ namespace DailyDataFormat
                     if (!Stockdata.Any(r => r.Name == stock))
                     {
                         Notfounddata.Add(stock);
+                    }
+                }
+
+                foreach (string stock in SkipList)
+                {
+                    if (Stockdata.Any(r => r.Name == stock))
+                    {
+                        Notfounddata.Remove(stock);
                     }
                 }
 

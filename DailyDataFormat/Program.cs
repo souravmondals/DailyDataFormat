@@ -3,9 +3,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Security.Policy;
 using System.Text;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 
 
@@ -14,13 +17,18 @@ namespace DailyDataFormat
     public class Program
     {
         public static string filedate;
+        public static string APIdate;
         public static List<string> StockList;
         public static List<string> SkipList;
 
         public static List<string> Notfounddata = new List<string>();
         public static List<Datamodel> Newdata = new List<Datamodel>();
+
+
+        public static HttpClient _httpClient;
+
         public static async Task Main(string[] args)
-        {
+        {           
 
             Console.WriteLine("Select following option \n 1) Get data from NSE \n 2) Process data.\n");
             string input = Console.ReadLine();
@@ -111,13 +119,7 @@ namespace DailyDataFormat
                     }
                 }
 
-                foreach (string stock in SkipList)
-                {
-                    if (Stockdata.Any(r => r.Name == stock))
-                    {
-                        Notfounddata.Remove(stock);              
-                    }
-                }
+               
 
                 if (!Directory.Exists("Output"))
                 {
@@ -125,6 +127,31 @@ namespace DailyDataFormat
                     Directory.CreateDirectory("temp");
                 }
 
+                PriceData NiftyValues = GetNSEDataAsync("NIFTY 50", APIdate, APIdate).Result;
+                Datamodel datamodel = new Datamodel
+                {
+                    Name = "NIFTY50",
+                    dateDate = filedate.Replace("-", ""),
+                    Open = NiftyValues.Open.ToString(),
+                    High = NiftyValues.High.ToString(),
+                    Low = NiftyValues.Low.ToString(),
+                    Close = NiftyValues.Close.ToString(),
+                    Volume = "0"
+                };
+                Stockdata.Add(datamodel);
+
+                PriceData BankNiftyValues = GetNSEDataAsync("NIFTY BANK", APIdate, APIdate).Result;
+                datamodel = new Datamodel
+                {
+                    Name = "BANKNIFTY",
+                    dateDate = filedate.Replace("-", ""),
+                    Open = BankNiftyValues.Open.ToString(),
+                    High = BankNiftyValues.High.ToString(),
+                    Low = BankNiftyValues.Low.ToString(),
+                    Close = BankNiftyValues.Close.ToString(),
+                    Volume = "0"
+                };
+                Stockdata.Add(datamodel);
 
                 var lines = new List<string>();
                 var valueLines = Stockdata.Where(row => row.Name != null).Select(row => string.Join(",", new string[] { row.Name, row.dateDate, row.Open, row.High, row.Low, row.Close, row.Volume }));
@@ -187,13 +214,7 @@ namespace DailyDataFormat
                     }
                 }
 
-                foreach (string stock in SkipList)
-                {
-                    if (Stockdata.Any(r => r.Name == stock))
-                    {
-                        Notfounddata.Remove(stock);
-                    }
-                }
+              
 
 
                 var lines = new List<string>();
@@ -256,6 +277,7 @@ namespace DailyDataFormat
             data.Name = values[0];
             DateTime date_Date = Convert.ToDateTime(values[2]);
             filedate = date_Date.ToString("yyyy-MM-dd");
+            APIdate = date_Date.ToString("dd-MM-yyyy");
             data.dateDate = date_Date.ToString("yyyyMMdd");
             data.Open = values[4];
             data.High = values[5];
@@ -268,7 +290,11 @@ namespace DailyDataFormat
             }
             else
             {
-                Newdata.Add(data);
+                if (!SkipList.Contains(values[0]))
+                {
+                    Newdata.Add(data);
+                }
+                
                 return new Datamodel();
             }
 
@@ -304,6 +330,60 @@ namespace DailyDataFormat
             return new Datamodel();
 
         }
+
+        public class PriceData
+        {
+            public double Open { get; set; }
+            public double High { get; set; }
+            public double Low { get; set; }
+            public double Close { get; set; }
+        }
+
+        public static async Task<PriceData> GetNSEDataAsync(string stock, string fromDate, string toDate)
+        {
+            try
+            {
+                var handler = new HttpClientHandler
+                {
+                    // NSE requires cookies set during the initial visit to be sent on the API call
+                    UseCookies = true,
+                    CookieContainer = new System.Net.CookieContainer()
+                };
+
+                _httpClient = new HttpClient(handler);
+                _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd(
+                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36");
+                _httpClient.DefaultRequestHeaders.Accept.ParseAdd("application/json, text/plain, */*");
+                _httpClient.DefaultRequestHeaders.Add("Accept-Language", "en-US,en;q=0.9");
+                _httpClient.DefaultRequestHeaders.Referrer = new Uri("https://www.nseindia.com/");
+
+                string url = $"https://www.nseindia.com/api/historicalOR/indicesHistory?indexType={stock}&from={fromDate}&to={toDate}";
+
+                await _httpClient.GetAsync("https://www.nseindia.com");
+                var returnValue = new PriceData();
+                var response = await _httpClient.GetAsync(url);
+                if (response.IsSuccessStatusCode)
+                {
+                    string jsonst = await response.Content.ReadAsStringAsync();
+                    //var doc = JsonConvert.DeserializeObject(jsonst);
+                    var doc = JObject.Parse(jsonst);
+                    var itemData = doc["data"][0];
+                    returnValue.Open = itemData["EOD_OPEN_INDEX_VAL"].Value<double>();
+                    returnValue.High = itemData["EOD_HIGH_INDEX_VAL"].Value<double>();
+                    returnValue.Low = itemData["EOD_LOW_INDEX_VAL"].Value<double>();
+                    returnValue.Close = itemData["EOD_CLOSE_INDEX_VAL"].Value<double>();
+                }
+
+                return returnValue;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error fetching data for {stock}: {ex.Message}");
+                return new PriceData();
+            }
+            
+        }
+
 
 
         public static List<Datamodel> RemoveDuplicate(List<Datamodel> Stockdata)
